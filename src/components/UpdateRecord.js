@@ -5,44 +5,45 @@ import * as firebase from 'firebase/app';
 
 import { Button, Modal, ModalHeader, ModalBody } from 'reactstrap';
 import { Form, FormGroup, Label, Input } from 'reactstrap';
-class AddRecord extends React.Component {
+class UpdateRecord extends React.Component {
     constructor(props) {
         super(props);
+        const { title, description, starttime, endtime } = this.props.record;
         this.state = {
             modal: false,
-            title: '',
-            description: '',
-            starttime: '',
-            endtime: '',
+            title: title,
+            description: description,
+            starttime: starttime,
+            endtime: endtime,
             errors: {},
-            addStatus: 0 //0: default, 1: add process, 2: add complete
+            updateStatus: 0 //0: default, 1: update process, 2: update complete
         };
-
         this.toggle = this.toggle.bind(this);
     }
 
     toggle() {
         this.setState(prevState => ({
-            modal: !prevState.modal, addStatus: 0
+            modal: !prevState.modal, deleteStatus: 0
         }));
     }
     handleFormSubmit = (e) => {
+        const { record } = this.props;
+        const recordId = record.recordId;
         if (this.handleValidation()) {
             this.setState({
-                addStatus: 1
+                updateStatus: 1
             })
             const { title, description, starttime, endtime } = this.state;
-            const date = this.getToday();
             firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
                 let uid = firebase.auth().currentUser.uid;
-                let addRecordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?auth=${idToken}`;
+                let updateRecordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}/${recordId}.json?auth=${idToken}`;
                 this.setState({
-                    addStatus: 2
+                    updateStatus: 2
                 })
-                axios.post(addRecordString, { title, description, starttime, endtime, date })
+                axios.patch(updateRecordString, { title, description, starttime, endtime })
                     .then((result) => {
                         this.setState({
-                            addComplete: 1
+                            updateComplete: 1
                         })
                         //update App.js list record from function passed in props
                         const { update } = this.props;
@@ -56,21 +57,13 @@ class AddRecord extends React.Component {
     handleChange = (e) => {
         this.setState({ [e.target.name]: e.target.value });
     }
-    getToday() {
-        var today = new Date();
-        var dd = String(today.getDate()).padStart(2, '0');
-        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-        var yyyy = today.getFullYear();
-        today = dd + '/' + mm + '/' + yyyy;
-        return today;
-    }
     handleClearForm = (e) => {
         this.setState({
             title: '',
             description: '',
             starttime: '',
             endtime: '',
-            addStatus: 0
+            updateStatus: 0
         });
     }
     handleValidation() {
@@ -94,17 +87,19 @@ class AddRecord extends React.Component {
         this.setState({ errors: errors });
         return formIsValid;
     }
+
     render() {
-        const { addStatus, title, description, starttime, endtime, errors } = this.state;
+        const { updateStatus, title, description, starttime, endtime, errors } = this.state;
+        const { record } = this.props;
         return (
             <div>
-                <Button color="primary" onClick={this.toggle}>Add New Record</Button>
+                <Button color="primary" onClick={this.toggle}>Update</Button>
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
-                    <ModalHeader toggle={this.toggle}>Add New Record</ModalHeader>
+                    <ModalHeader toggle={this.toggle}>Update Record</ModalHeader>
                     <ModalBody>
                         <Form onSubmit={this.handleFormSubmit}>
                             <FormGroup>
-                                <Label for="text">Title</Label>
+                                <Label for="text">Title {record.recordId}</Label>
                                 <Input type="text" name="title" value={title} onChange={this.handleChange} />
                                 <span style={{ color: "red" }}>{errors["title"]}</span>
                             </FormGroup>
@@ -130,11 +125,11 @@ class AddRecord extends React.Component {
                                 />
                                 <span style={{ color: "red" }}>{errors["endtime"]}</span>
                             </FormGroup>
-                            <Button color="primary" onClick={this.handleFormSubmit}>Add Record</Button>{' '}
+                            <Button color="primary" onClick={this.handleFormSubmit}>Update Record</Button>{' '}
                             <Button color="secondary" onClick={this.handleClearForm}>Clear</Button>{' '}
                             <Button color="secondary" onClick={this.toggle}>Cancel</Button>
-                            {addStatus === 1 ? <p className="text-success">Processing...</p> : ''}
-                            {addStatus === 2 ? <p className="text-success">Add Complete!</p> : ' '}
+                            {updateStatus === 1 ? <p className="text-success">Processing...</p> : ''}
+                            {updateStatus === 2 ? <p className="text-success">Update Complete!</p> : ' '}
                         </Form>
                     </ModalBody>
                 </Modal>
@@ -143,4 +138,4 @@ class AddRecord extends React.Component {
     }
 }
 
-export default AddRecord;
+export default UpdateRecord;

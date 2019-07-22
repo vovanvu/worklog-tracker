@@ -1,5 +1,5 @@
 import React from "react";
-import './TopMenu.css'
+import '../css/TopMenu.css'
 import { Button } from 'reactstrap';
 import {
     Collapse,
@@ -33,17 +33,17 @@ export default class TopMenu extends React.Component {
                     <Collapse isOpen={this.state.isOpen} navbar>
                         <Nav className="ml-auto" navbar>
                             <NavItem>
-                                <Link to="/">My Report</Link>
+                                <Link to="/">My Record</Link>
                             </NavItem>
                             <NavItem>
-                                <Link to="/">Empoyee Report</Link>
+                                <Link to="/">Employee Record</Link>
                             </NavItem>
                             <NavItem>
                                 <Link to="/">Report</Link>
                             </NavItem>
                             <NavItem className="userBox">
-                                <img alt='avatar' width={40} height={40} src={user.photoURL} />
-                                <p>{user.displayName}</p>
+                                <img id='avatar' alt='avatar' width={40} height={40} src={user.photoURL} />
+                                <p id='display-name'>{user.displayName}</p>
                                 <Button className="secondary" onClick={signOut}>Sign out</Button>
                             </NavItem>
                         </Nav>

@@ -5,8 +5,9 @@ import { Container, Button } from 'reactstrap';
 import axios from 'axios'
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import TopMenu from './components/TopMenu'
-import MyRecord from './components/MyRecord'
 import AddRecord from './components/AddRecord'
+import RecordTable from './components/RecordTable'
+// import Tbl from './components/Tbl'
 //firebase
 import withFirebaseAuth from 'react-with-firebase-auth'
 import * as firebase from 'firebase/app';
@@ -26,7 +27,7 @@ class App extends Component {
     this.state = {
       //init for render value, otherwise render() get null
       currentUser: {},
-      listRecord: []
+      listRecord: [],
     }
   }
 
@@ -54,12 +55,29 @@ class App extends Component {
               recordArray.push([key, records[key]]);
             }
           }
+          //  merge array
+          let mergeArray = [];
+          // for (let key in records) {
+          //   if (records.hasOwnProperty(key)) {
+          //     var recordKey = [key];
+          //     var record = Object.values(records[key]);
+          //     record.reverse();
+          //     var result = recordKey.concat(record);
+          //     mergeArray.push(result);
+          //   }
+          // }
+          for (let key in records) {
+            if (records.hasOwnProperty(key)) {
+              // var record = records[key].recordKey = key;
+              var record = records[key];
+              record['recordId'] = key;
+              mergeArray.push(record);
+            }
+          }
           this.setState({
             currentUser: userRes.data,
-            listRecord: recordArray
+            listRecord: mergeArray
           })
-          // console.log(this.state.listRecord.length);
-          console.log(this.state.listRecord);
         })).catch(function (error) {
           console.log("axios request error");
         });
@@ -67,22 +85,28 @@ class App extends Component {
     //null because not setstate before, log before axios get done (async)
     // console.log(this.state.listRecord);
   }
+
+  //update function to call from child component
   update = () => {
     let user = firebase.auth().currentUser;
     this.updateList(user);
   }
+
   componentDidMount() {
     firebase.auth().onAuthStateChanged((user) => {
       this.updateList(user);
     });
   }
+
   render() {
     const {
       user,
       signOut,
-      signInWithGoogle,
+      signInWithGoogle
     } = this.props;
-    const { currentUser, listRecord } = this.state;
+    // const { currentUser, listRecord } = this.state;
+    const { listRecord } = this.state;
+
     return (
       <Router>
         <Container>
@@ -91,12 +115,12 @@ class App extends Component {
               user
                 ? <div>
                   <TopMenu user={user} signOut={signOut} />
-                  <p>Manager: {currentUser.managerid}</p>
-                  <p>Permission: {currentUser.permission}</p>
-                  <AddRecord update={this.update} buttonLabel="Add New Record" />
+                  {/* <p>Manager: {currentUser.managerid}</p>
+                  <p>Permission: {currentUser.permission}</p> */}
+                  <AddRecord update={this.update} />
                   <Route
                     path='/' exact
-                    render={() => <MyRecord listRecord={listRecord} />}
+                    render={() => <RecordTable listRecord={listRecord} update={this.update} />}
                   />
                 </div>
                 :
