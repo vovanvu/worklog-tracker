@@ -2,14 +2,18 @@
 import React from 'react';
 import axios from 'axios';
 import * as firebase from 'firebase/app';
-
+import '../css/UpdateRecord.css'
 import { Button, Modal, ModalHeader, ModalBody } from 'reactstrap';
 import { Form, FormGroup, Label, Input } from 'reactstrap';
+import { FaInfo, FaEdit } from 'react-icons/fa';
+
 class UpdateRecord extends React.Component {
     constructor(props) {
         super(props);
         const { title, description, starttime, endtime } = this.props.record;
+        const { readOnly } = this.props;
         this.state = {
+            readOnly: readOnly,
             modal: false,
             title: title,
             description: description,
@@ -23,8 +27,15 @@ class UpdateRecord extends React.Component {
 
     toggle() {
         this.setState(prevState => ({
-            modal: !prevState.modal, deleteStatus: 0
+            modal: !prevState.modal, updateStatus: 0
         }));
+        const { title, description, starttime, endtime } = this.props.record;
+        this.setState({
+            title: title,
+            description: description,
+            starttime: starttime,
+            endtime: endtime
+        });
     }
     handleFormSubmit = (e) => {
         const { record } = this.props;
@@ -83,53 +94,102 @@ class UpdateRecord extends React.Component {
             formIsValid = false;
             errors["endtime"] = "Cannot be empty";
         }
-
+        if (starttime && endtime) {
+            const validTime = this.isEndTimeAfterStartTime(starttime, endtime);
+            if (!validTime) {
+                formIsValid = false;
+                errors["endtime"] = "End time must be after start time";
+            }
+        }
         this.setState({ errors: errors });
         return formIsValid;
     }
-
+    isEndTimeAfterStartTime(start, end) {
+        var startArr = start.split(':');
+        var endArr = end.split(':');
+        var startHour = startArr[0];
+        var startMinute = startArr[1];
+        var endHour = endArr[0];
+        var endMinute = endArr[1];
+        if (endHour > startHour) {
+            return true;
+        }
+        // eslint-disable-next-line
+        if (endHour == startHour && endMinute >= startMinute) {
+            return true;
+        }
+        return false;
+    }
     render() {
-        const { updateStatus, title, description, starttime, endtime, errors } = this.state;
+        const { updateStatus, title, description, starttime, endtime, errors, readOnly } = this.state;
         const { record } = this.props;
         return (
             <div>
-                <Button color="primary" onClick={this.toggle}>Update</Button>
+                {readOnly ?
+                    <Button className="btn-action" color="secondary" onClick={this.toggle}><FaInfo /></Button> :
+                    <Button className="btn-action" color="secondary" onClick={this.toggle}><FaEdit /></Button>
+                }
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
-                    <ModalHeader toggle={this.toggle}>Update Record</ModalHeader>
+                    {readOnly ?
+                        <ModalHeader toggle={this.toggle}>Info Record <b>{record.recordId}</b></ModalHeader> :
+                        <ModalHeader toggle={this.toggle}>Update Record <b>{record.recordId}</b></ModalHeader>
+                    }
                     <ModalBody>
                         <Form onSubmit={this.handleFormSubmit}>
                             <FormGroup>
-                                <Label for="text">Title {record.recordId}</Label>
-                                <Input type="text" name="title" value={title} onChange={this.handleChange} />
+                                <Label for="text">Title</Label>
+                                {
+                                    readOnly ? (<Input readOnly type="text" name="title" value={title} />) :
+                                        <Input type="text" name="title" value={title} onChange={this.handleChange} />
+
+                                }
                                 <span style={{ color: "red" }}>{errors["title"]}</span>
                             </FormGroup>
                             <FormGroup>
                                 <FormGroup>
                                     <Label for="exampleText">Descriptipn</Label>
-                                    <Input type="textarea" name="description" value={description} onChange={this.handleChange} />
+                                    {
+                                        readOnly ? (<Input readOnly type="textarea" name="description" value={description} />) :
+                                            <Input type="textarea" name="description" value={description} onChange={this.handleChange} />
+                                    }
                                 </FormGroup>
                             </FormGroup>
                             <FormGroup>
                                 <Label for="exampleTime">Start Time</Label>
-                                <Input value={starttime}
-                                    type="time"
-                                    name="starttime" onChange={this.handleChange}
-                                />
+                                {
+                                    readOnly ? (<Input readOnly value={starttime}
+                                        type="time"
+                                        name="starttime" />) :
+                                        <Input value={starttime}
+                                            type="time"
+                                            name="starttime" onChange={this.handleChange}
+                                        />
+                                }
+
                                 <span style={{ color: "red" }}>{errors["starttime"]}</span>
                             </FormGroup>
                             <FormGroup>
                                 <Label for="exampleTime">End Time</Label>
-                                <Input value={endtime}
-                                    type="time"
-                                    name="endtime" onChange={this.handleChange}
-                                />
+                                {
+                                    readOnly ? (<Input readOnly value={endtime}
+                                        type="time"
+                                        name="endtime" />) :
+                                        <Input value={endtime}
+                                            type="time"
+                                            name="endtime" onChange={this.handleChange}
+                                        />
+                                }
                                 <span style={{ color: "red" }}>{errors["endtime"]}</span>
                             </FormGroup>
-                            <Button color="primary" onClick={this.handleFormSubmit}>Update Record</Button>{' '}
-                            <Button color="secondary" onClick={this.handleClearForm}>Clear</Button>{' '}
-                            <Button color="secondary" onClick={this.toggle}>Cancel</Button>
-                            {updateStatus === 1 ? <p className="text-success">Processing...</p> : ''}
-                            {updateStatus === 2 ? <p className="text-success">Update Complete!</p> : ' '}
+                            {
+                                readOnly ? <Button color="secondary" onClick={this.toggle}>Cancel</Button> :
+                                    <div>     <Button color="primary" onClick={this.handleFormSubmit}>Update Record</Button>{' '}
+                                        <Button color="secondary" onClick={this.handleClearForm}>Clear</Button>{' '}
+                                        <Button color="secondary" onClick={this.toggle}>Cancel</Button>
+                                        {updateStatus === 1 ? <p className="text-success">Processing...</p> : ''}
+                                        {updateStatus === 2 ? <p className="text-success">Update Complete!</p> : ' '}</div>
+                            }
+
                         </Form>
                     </ModalBody>
                 </Modal>

@@ -2,9 +2,11 @@
 import React from 'react';
 import axios from 'axios';
 import * as firebase from 'firebase/app';
-
+import '../css/DeleteRecord.css'
 import { Button, Modal, ModalHeader, ModalBody } from 'reactstrap';
 import { Form } from 'reactstrap';
+import { FaTrash } from 'react-icons/fa';
+
 class DeleteRecord extends React.Component {
     constructor(props) {
         super(props);
@@ -48,7 +50,7 @@ class DeleteRecord extends React.Component {
         const { recordId } = this.props;
         return (
             <div>
-                <Button color="secondary" onClick={this.toggle}>Delete</Button>
+                <Button id="btn-delete" color="secondary" onClick={this.toggle}><FaTrash /></Button>
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
                     <ModalHeader toggle={this.toggle}>Delete Record <b>{recordId}</b> ?</ModalHeader>
                     <ModalBody>

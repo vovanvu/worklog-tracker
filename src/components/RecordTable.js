@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css'
+import '../css/RecordTable.css'
 import DeleteRecord from '../components/DeleteRecord'
 import UpdateRecord from '../components/UpdateRecord'
 export default class RecordTable extends Component {
@@ -41,24 +42,24 @@ export default class RecordTable extends Component {
             {
                 Header: "Action",
                 Cell: props => {
-                    return (<div>
+                    return (<div className="action-group">
                         {/* <button
                             onClick={() => {
                                 console.log(props.original);
                             }}
                         >Delete</button> */}
+                        <UpdateRecord readOnly={true} record={props.original} />
+                        <UpdateRecord readOnly={false} record={props.original} update={this.props.update} />
                         <DeleteRecord recordId={props.original.recordId} update={this.props.update} />
-                        <UpdateRecord record={props.original} update={this.props.update} />
-
                     </div>
 
                     )
                 },
                 sortable: false,
                 filterable: false,
-                width: 300,
-                minWidth: 300,
-                maxWidth: 300
+                width: 200,
+                minWidth: 200,
+                maxWidth: 200
             }
         ]
         return (
