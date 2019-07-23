@@ -36,7 +36,7 @@ export default class TopMenu extends React.Component {
                                 <Link to="/">My Record</Link>
                             </NavItem>
                             <NavItem>
-                                <Link to="/">Employee Record</Link>
+                                <Link to="/employee-record">Employee Record</Link>
                             </NavItem>
                             <NavItem>
                                 <Link to="/">Report</Link>
@@ -44,7 +44,11 @@ export default class TopMenu extends React.Component {
                             <NavItem className="userBox">
                                 <img id='avatar' alt='avatar' width={40} height={40} src={user.photoURL} />
                                 <p id='display-name'>{user.displayName}</p>
-                                <Button className="secondary" onClick={signOut}>Sign out</Button>
+                                <Button className="secondary" onClick={(e) => {
+                                    const { reset } = this.props;
+                                    reset();
+                                    signOut();
+                                }}>Sign out</Button>
                             </NavItem>
                         </Nav>
                     </Collapse>

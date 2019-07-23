@@ -3,6 +3,7 @@ import React from 'react';
 import axios from 'axios';
 import * as firebase from 'firebase/app';
 import '../css/AddRecord.css'
+import { FaPlus } from 'react-icons/fa';
 import { Button, Modal, ModalHeader, ModalBody } from 'reactstrap';
 import { Form, FormGroup, Label, Input } from 'reactstrap';
 class AddRecord extends React.Component {
@@ -76,9 +77,6 @@ class AddRecord extends React.Component {
     }
     handleValidation() {
         const { title, starttime, endtime } = this.state;
-        //
-        console.log(starttime, endtime);
-        //
         let errors = {};
         let formIsValid = true;
 
@@ -124,7 +122,7 @@ class AddRecord extends React.Component {
         const { addStatus, title, description, starttime, endtime, errors } = this.state;
         return (
             <div>
-                <Button id="btn-add" color="primary" onClick={this.toggle}>Add New Record</Button>
+                <Button id="btn-add" color="primary" onClick={this.toggle}><FaPlus /> Add Record</Button>
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
                     <ModalHeader toggle={this.toggle}>Add New Record</ModalHeader>
                     <ModalBody>

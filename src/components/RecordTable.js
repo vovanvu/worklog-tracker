@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css'
 import '../css/RecordTable.css'
+import AddRecord from '../components/AddRecord'
 import DeleteRecord from '../components/DeleteRecord'
 import UpdateRecord from '../components/UpdateRecord'
 export default class RecordTable extends Component {
@@ -63,13 +64,16 @@ export default class RecordTable extends Component {
             }
         ]
         return (
-            <ReactTable
-                columns={columns}
-                data={this.props.listRecord}
-                filterable
-                defaultPageSize={10}
-            >
-            </ReactTable >
+            <div>
+                <AddRecord update={this.props.update} />
+                <ReactTable
+                    columns={columns}
+                    data={this.props.listRecord}
+                    filterable
+                    defaultPageSize={10}
+                >
+                </ReactTable >
+            </div>
         );
     }
 }
