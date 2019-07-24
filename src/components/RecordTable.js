@@ -7,7 +7,49 @@ import DeleteRecord from '../components/DeleteRecord'
 import UpdateRecord from '../components/UpdateRecord'
 export default class RecordTable extends Component {
     render() {
-        const columns = [
+        const { readOnly } = this.props;
+        const columnForRead = [
+            {
+                Header: "Title",
+                accessor: "title"
+            },
+            {
+                Header: "Date",
+                accessor: "date",
+                width: 100,
+                minWidth: 100,
+                maxWidth: 100
+            },
+            {
+                Header: "Start Time",
+                accessor: "starttime",
+                width: 100,
+                minWidth: 100,
+                maxWidth: 100
+            },
+            {
+                Header: "End Time",
+                accessor: "endtime",
+                width: 100,
+                minWidth: 100,
+                maxWidth: 100
+            },
+            {
+                Header: "Detail",
+                Cell: props => {
+                    return (<div className="action-group">
+                        <UpdateRecord readOnly={true} record={props.original} />
+                    </div>
+
+                    )
+                },
+                sortable: false,
+                filterable: false,
+                width: 100,
+                minWidth: 100,
+                maxWidth: 100
+            }];
+        const columnsForAction = [
             {
                 Header: "Record ID",
                 accessor: "recordId",
@@ -63,9 +105,11 @@ export default class RecordTable extends Component {
                 maxWidth: 200
             }
         ]
+        let columns = '';
+        readOnly ? columns = columnForRead : columns = columnsForAction;
         return (
             <div>
-                <AddRecord update={this.props.update} />
+                {!readOnly && <AddRecord update={this.props.update} />}
                 <ReactTable
                     columns={columns}
                     data={this.props.listRecord}

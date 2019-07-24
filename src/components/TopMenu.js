@@ -1,6 +1,7 @@
 import React from "react";
 import '../css/TopMenu.css'
 import { Button } from 'reactstrap';
+import { withRouter } from "react-router-dom";
 import {
     Collapse,
     Navbar,
@@ -10,7 +11,7 @@ import {
     NavItem
 } from "reactstrap";
 import { Link } from "react-router-dom";
-export default class TopMenu extends React.Component {
+class TopMenu extends React.Component {
     constructor(props) {
         super(props);
         this.toggle = this.toggle.bind(this);
@@ -39,13 +40,14 @@ export default class TopMenu extends React.Component {
                                 <Link to="/employee-record">Employee Record</Link>
                             </NavItem>
                             <NavItem>
-                                <Link to="/">Report</Link>
+                                <Link to="/report">Report</Link>
                             </NavItem>
                             <NavItem className="userBox">
                                 <img id='avatar' alt='avatar' width={40} height={40} src={user.photoURL} />
                                 <p id='display-name'>{user.displayName}</p>
                                 <Button className="secondary" onClick={(e) => {
                                     const { reset } = this.props;
+                                    this.props.history.push('/');
                                     reset();
                                     signOut();
                                 }}>Sign out</Button>
@@ -57,3 +59,5 @@ export default class TopMenu extends React.Component {
         );
     }
 }
+
+export default withRouter(TopMenu)

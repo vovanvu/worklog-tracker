@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Container, Button } from 'reactstrap';
+import { Container } from 'reactstrap';
 import axios from 'axios'
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import TopMenu from './components/TopMenu'
 import RecordTable from './components/RecordTable'
+import EmployeeTable from './components/EmployeeTable'
+import SignIn from './components/SignIn'
+
 //firebase
 import withFirebaseAuth from 'react-with-firebase-auth'
 import * as firebase from 'firebase/app';
@@ -26,26 +29,23 @@ class App extends Component {
       //init for render value, otherwise render() get null
       currentUser: {},
       listRecord: [],
+      listEmployee: [],
+      currentEmployee: '',
+      currentEmployeeRecord: []
     }
   }
-
-  updateList(user) {
-    //&& operator
+  setCurrentEmployee = (employeeId) => {
+    this.setState({ currentEmployee: employeeId }, () => {
+      this.updateCurrentEmployeeRecord();
+    });
+  }
+  updateCurrentEmployeeRecord = () => {
+    let user = firebase.auth().currentUser;
     user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
-      // Send token to your backend via HTTPS
-      // Access REST API with idToken, config rule in database rule
-      //console.log(idToken);
-      //khong co quyen tao user voi uid cua minh
-      //let queryString = `https://firstfirebase-ffcda.firebaseio.com/user.json`;
-      let uid = user.uid;
-      let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?auth=${idToken}`;
-      let userString = `https://firstfirebase-ffcda.firebaseio.com/user/${uid}.json?auth=${idToken}`;
-
-      axios.all([
-        axios.get(userString),
-        axios.get(recordString)
-      ])
-        .then(axios.spread((userRes, recordRes) => {
+      const { currentEmployee } = this.state;
+      user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
+        let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${currentEmployee}.json?auth=${idToken}`;
+        axios.get(recordString).then((recordRes) => {
           //  convert record response json to array
           let records = recordRes.data;
           let recordArray = [];
@@ -63,9 +63,85 @@ class App extends Component {
               mergeArray.push(record);
             }
           }
+          this.setState({ currentEmployeeRecord: mergeArray });
+        })
+      })
+    });
+  }
+
+  getListEmployee(user) {
+    user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
+      let uid = user.uid;
+      // get list employee
+      let employeeString = `https://firstfirebase-ffcda.firebaseio.com/user/${uid}/employee.json?auth=${idToken}`;
+      axios.get(employeeString).then((result) => {
+        //
+        const empData = result.data;
+        let empArray = [];
+        for (let key in empData) {
+          if (empData.hasOwnProperty(key)) {
+            empArray.push(key);
+          }
+        }
+        console.log(empArray);
+        // const emp = empArray[0];
+        // let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${emp}.json?auth=${idToken}`;
+        // axios.get(recordString).then((record) => {
+        //   console.log(record);
+        // })
+      }).catch(function (error) {
+        console.log("axios request error", error);
+      });
+    });
+  }
+  updateList(user) {
+    //&& operator
+    user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
+      // console.log(idToken);
+      // Send token to your backend via HTTPS
+      // Access REST API with idToken, config rule in database rule
+      //khong co quyen tao user voi uid cua minh
+      //let queryString = `https://firstfirebase-ffcda.firebaseio.com/user.json`;
+      let uid = user.uid;
+      let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?auth=${idToken}`;
+      let userString = `https://firstfirebase-ffcda.firebaseio.com/user/${uid}.json?auth=${idToken}`;
+      let employeeString = `https://firstfirebase-ffcda.firebaseio.com/user/${uid}/employee.json?auth=${idToken}`;
+
+      axios.all([
+        axios.get(userString),
+        axios.get(recordString),
+        axios.get(employeeString)
+      ])
+        .then(axios.spread((userRes, recordRes, employeeRes) => {
+          //  convert record response json to array
+          let records = recordRes.data;
+          let recordArray = [];
+          for (let key in records) {
+            if (records.hasOwnProperty(key)) {
+              recordArray.push([key, records[key]]);
+            }
+          }
+          //  merge array
+          let mergeArray = [];
+          for (let key in records) {
+            if (records.hasOwnProperty(key)) {
+              var record = records[key];
+              record['recordId'] = key;
+              mergeArray.push(record);
+            }
+          }
+          //list employee
+          const empData = employeeRes.data;
+          let empArray = [];
+          for (let key in empData) {
+            if (empData.hasOwnProperty(key)) {
+              empArray.push({ 'employeeId': key });
+            }
+          }
           this.setState({
             currentUser: userRes.data,
-            listRecord: mergeArray
+            listRecord: mergeArray,
+            listEmployee: empArray
           })
         })).catch(function (error) {
           console.log("axios request error", error);
@@ -95,6 +171,9 @@ class App extends Component {
     this.setState({
       currentUser: {},
       listRecord: [],
+      listEmployee: [],
+      currentEmployee: '',
+      currentEmployeeRecord: []
     });
   }
   render() {
@@ -103,7 +182,7 @@ class App extends Component {
       signOut,
       signInWithGoogle
     } = this.props;
-    const { listRecord } = this.state;
+    const { listRecord, listEmployee, currentEmployee, currentEmployeeRecord } = this.state;
 
     return (
       <Router>
@@ -111,21 +190,38 @@ class App extends Component {
           <div className="App">
             {
               user
-                ? <div>
-                  <TopMenu user={user} signOut={signOut} reset={this.reset} />
+                ?
+                <div>
                   {/* <p>Manager: {currentUser.managerid}</p>
                   <p>Permission: {currentUser.permission}</p> */}
+                  <TopMenu user={user} signOut={signOut} reset={this.reset} />
                   <Route
                     path='/' exact
-                    render={() => <RecordTable listRecord={listRecord} update={this.update} />}
+                    render={() =>
+                      <RecordTable
+                        listRecord={listRecord}
+                        update={this.update}
+                        readOnly={false} />}
                   />
                   <Route
                     path='/employee-record' exact
-                    render={() => <h2>employee</h2>}
+                    render={() =>
+                      <EmployeeTable
+                        listEmployee={listEmployee}
+                        currentEmployee={currentEmployee}
+                        listRecord={currentEmployeeRecord}
+                        setCurrentEmployee={this.setCurrentEmployee}
+                      />}
+                  />
+                  <Route
+                    path='/report' exact
+                    render={() =>
+                      <p>Report will be here!</p>
+                    }
                   />
                 </div>
                 :
-                <Button className="primary" onClick={signInWithGoogle}>Sign in with Google</Button>
+                <SignIn signInWithGoogle={signInWithGoogle} />
             }
           </div>
         </Container>

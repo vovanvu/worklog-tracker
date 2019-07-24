@@ -1,0 +1,19 @@
+{
+    "rules": {
+        // ".read":"auth.uid !== null",
+        // ".write": "auth.uid !== null",
+        "user": {
+            "$uid": {
+                ".read": "$uid === auth.uid|| root.child('user').child($uid).child('managerid').val() == auth.uid"
+            },
+            ".indexOn": ["managerid"]
+        },
+        "record": {
+            "$uid": {
+                ".read": "$uid === auth.uid|| root.child('user').child($uid).child('managerid').val() == auth.uid",
+                    ".write": "$uid === auth.uid",
+                        ".indexOn": ["starttime"]
+            }
+        }
+    }
+}

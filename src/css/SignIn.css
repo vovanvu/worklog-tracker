@@ -1,0 +1,26 @@
+#signin-background {
+  background-color: #f0f0f0;
+}
+#rectangle {
+  width: 320px;
+  height: 170px;
+  background: #ffffff;
+  border: 1px solid #c7c7c7;
+  box-sizing: border-box;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top:10%;
+}
+#worklog-text{
+  text-align:center;
+  color:#7c7c7c;
+  font-size:22px;
+}
+#signin-box{
+  padding-top: 40px
+}
+.btn-signin{
+  text-align: center;
+}
