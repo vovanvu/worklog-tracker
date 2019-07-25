@@ -48,13 +48,11 @@ class UpdateRecord extends React.Component {
             firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
                 let uid = firebase.auth().currentUser.uid;
                 let updateRecordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}/${recordId}.json?auth=${idToken}`;
-                this.setState({
-                    updateStatus: 2
-                })
+
                 axios.patch(updateRecordString, { title, description, starttime, endtime })
                     .then((result) => {
                         this.setState({
-                            updateComplete: 1
+                            updateStatus: 2
                         })
                         //update App.js list record from function passed in props
                         const { update } = this.props;
@@ -78,11 +76,12 @@ class UpdateRecord extends React.Component {
         });
     }
     handleValidation() {
-        const { title, starttime, endtime } = this.state;
+        const { starttime, endtime } = this.state;
+        let { title } = this.state;
         let errors = {};
         let formIsValid = true;
-
-        if (!title || !title.trim()) {
+        title = title.trim();
+        if (!title) {
             formIsValid = false;
             errors["title"] = "Cannot be empty";
         }

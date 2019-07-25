@@ -31,13 +31,11 @@ class DeleteRecord extends React.Component {
             let uid = firebase.auth().currentUser.uid;
             var recordId = this.props.recordId;
             let deleteRecordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}/${recordId}.json?auth=${idToken}`;
-            this.setState({
-                deleteStatus: 2
-            })
+
             axios.delete(deleteRecordString, recordId)
-                .then((result) => {
+                .then(() => {
                     this.setState({
-                        deleteComplete: 1
+                        deleteStatus: 2
                     })
                     //update App.js list record from function passed in props
                     const { update } = this.props;
