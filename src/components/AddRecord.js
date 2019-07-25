@@ -16,23 +16,38 @@ class AddRecord extends React.Component {
             starttime: '',
             endtime: '',
             errors: {},
-            addStatus: 0 //0: default, 1: add process, 2: add complete
+            addStatus: 0, //0: default, 1: add process, 2: add complete
+            isAutoAdd: false
         };
 
         this.toggle = this.toggle.bind(this);
+        this.handleAutoCheck = this.handleAutoCheck.bind(this);
     }
 
     toggle() {
         this.setState(prevState => ({
-            modal: !prevState.modal, addStatus: 0
+            modal: !prevState.modal
         }));
+        const { modal } = this.state;
+        !modal &&
+            this.setState({
+                title: '',
+                description: '',
+                starttime: '',
+                endtime: '',
+                errors: {},
+                addStatus: 0, //0: default, 1: add process, 2: add complete
+                isAutoAdd: false
+            });
+
     }
     handleFormSubmit = (e) => {
         if (this.handleValidation()) {
             this.setState({
                 addStatus: 1
             })
-            const { title, description, starttime, endtime } = this.state;
+            const { title, description } = this.state;
+            let { starttime, endtime, isAutoAdd } = this.state;
             const date = this.getToday();
             firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
                 let uid = firebase.auth().currentUser.uid;
@@ -40,6 +55,15 @@ class AddRecord extends React.Component {
                 this.setState({
                     addStatus: 2
                 })
+                //if auto add, get current time to fill start time and empty for end time
+                if (isAutoAdd) {
+                    var today = new Date();
+                    var hh = String(today.getHours()).padStart(2, '0');
+                    var mm = String(today.getMinutes()).padStart(2, '0');
+                    var time = hh + ":" + mm;
+                    starttime = time;
+                    endtime = '';
+                }
                 axios.post(addRecordString, { title, description, starttime, endtime, date })
                     .then((result) => {
                         this.setState({
@@ -76,7 +100,7 @@ class AddRecord extends React.Component {
         });
     }
     handleValidation() {
-        const { title, starttime, endtime } = this.state;
+        const { title, starttime, endtime, isAutoAdd } = this.state;
         let errors = {};
         let formIsValid = true;
 
@@ -84,19 +108,21 @@ class AddRecord extends React.Component {
             formIsValid = false;
             errors["title"] = "Cannot be empty";
         }
-        if (!starttime) {
-            formIsValid = false;
-            errors["starttime"] = "Cannot be empty";
-        }
-        if (!endtime) {
-            formIsValid = false;
-            errors["endtime"] = "Cannot be empty";
-        }
-        if (starttime && endtime) {
-            const validTime = this.isEndTimeAfterStartTime(starttime, endtime);
-            if (!validTime) {
+        if (!isAutoAdd) {
+            if (!starttime) {
                 formIsValid = false;
-                errors["endtime"] = "End time must be after start time";
+                errors["starttime"] = "Cannot be empty";
+            }
+            if (!endtime) {
+                formIsValid = false;
+                errors["endtime"] = "Cannot be empty";
+            }
+            if (starttime && endtime) {
+                const validTime = this.isEndTimeAfterStartTime(starttime, endtime);
+                if (!validTime) {
+                    formIsValid = false;
+                    errors["endtime"] = "End time must be after start time";
+                }
             }
         }
         this.setState({ errors: errors });
@@ -118,8 +144,19 @@ class AddRecord extends React.Component {
         }
         return false;
     }
+    handleAutoCheck(e) {
+        const checkStatus = e.target.checked;
+        checkStatus ?
+            this.setState({
+                isAutoAdd: true,
+                starttime: '',
+                endtime: ''
+            })
+            :
+            this.setState({ isAutoAdd: false });
+    }
     render() {
-        const { addStatus, title, description, starttime, endtime, errors } = this.state;
+        const { addStatus, title, description, starttime, endtime, errors, isAutoAdd } = this.state;
         return (
             <div>
                 <Button id="btn-add" color="primary" onClick={this.toggle}><FaPlus /> Add Record</Button>
@@ -127,6 +164,12 @@ class AddRecord extends React.Component {
                     <ModalHeader toggle={this.toggle}>Add New Record</ModalHeader>
                     <ModalBody>
                         <Form onSubmit={this.handleFormSubmit}>
+                            <FormGroup check>
+                                <Label check>
+                                    <Input type="checkbox" onChange={this.handleAutoCheck} />
+                                    <span title="Add a record with start time is time when you click Add Record, you can stop it in future to get end time">Automatic Add</span>
+                                </Label>
+                            </FormGroup>
                             <FormGroup>
                                 <Label for="text">Title</Label>
                                 <Input type="text" name="title" value={title} onChange={this.handleChange} />
@@ -138,22 +181,25 @@ class AddRecord extends React.Component {
                                     <Input type="textarea" name="description" value={description} onChange={this.handleChange} />
                                 </FormGroup>
                             </FormGroup>
-                            <FormGroup>
-                                <Label for="exampleTime">Start Time</Label>
-                                <Input value={starttime}
-                                    type="time"
-                                    name="starttime" onChange={this.handleChange}
-                                />
-                                <span style={{ color: "red" }}>{errors["starttime"]}</span>
-                            </FormGroup>
-                            <FormGroup>
-                                <Label for="exampleTime">End Time</Label>
-                                <Input value={endtime}
-                                    type="time"
-                                    name="endtime" onChange={this.handleChange}
-                                />
-                                <span style={{ color: "red" }}>{errors["endtime"]}</span>
-                            </FormGroup>
+                            {!isAutoAdd &&
+                                <div>
+                                    <FormGroup>
+                                        <Label for="exampleTime">Start Time</Label>
+                                        <Input value={starttime}
+                                            type="time"
+                                            name="starttime" onChange={this.handleChange}
+                                        />
+                                        <span style={{ color: "red" }}>{errors["starttime"]}</span>
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <Label for="exampleTime">End Time</Label>
+                                        <Input value={endtime}
+                                            type="time"
+                                            name="endtime" onChange={this.handleChange}
+                                        />
+                                        <span style={{ color: "red" }}>{errors["endtime"]}</span>
+                                    </FormGroup>
+                                </div>}
                             <Button color="primary" onClick={this.handleFormSubmit}>Add Record</Button>{' '}
                             <Button color="secondary" onClick={this.handleClearForm}>Clear</Button>{' '}
                             <Button color="secondary" onClick={this.toggle}>Cancel</Button>

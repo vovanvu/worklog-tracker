@@ -46,15 +46,10 @@ class App extends Component {
       user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
         let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${currentEmployee}.json?auth=${idToken}`;
         axios.get(recordString).then((recordRes) => {
-          //  convert record response json to array
+
           let records = recordRes.data;
-          let recordArray = [];
-          for (let key in records) {
-            if (records.hasOwnProperty(key)) {
-              recordArray.push([key, records[key]]);
-            }
-          }
           //  merge array
+          //  mergeArray = [{recordId,...recorddata},...]
           let mergeArray = [];
           for (let key in records) {
             if (records.hasOwnProperty(key)) {
@@ -83,12 +78,6 @@ class App extends Component {
             empArray.push(key);
           }
         }
-        console.log(empArray);
-        // const emp = empArray[0];
-        // let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${emp}.json?auth=${idToken}`;
-        // axios.get(recordString).then((record) => {
-        //   console.log(record);
-        // })
       }).catch(function (error) {
         console.log("axios request error", error);
       });
@@ -101,7 +90,6 @@ class App extends Component {
       // Send token to your backend via HTTPS
       // Access REST API with idToken, config rule in database rule
       //khong co quyen tao user voi uid cua minh
-      //let queryString = `https://firstfirebase-ffcda.firebaseio.com/user.json`;
       let uid = user.uid;
       let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?auth=${idToken}`;
       let userString = `https://firstfirebase-ffcda.firebaseio.com/user/${uid}.json?auth=${idToken}`;
@@ -115,13 +103,16 @@ class App extends Component {
         .then(axios.spread((userRes, recordRes, employeeRes) => {
           //  convert record response json to array
           let records = recordRes.data;
-          let recordArray = [];
-          for (let key in records) {
-            if (records.hasOwnProperty(key)) {
-              recordArray.push([key, records[key]]);
-            }
-          }
+          //  convert record response json to array,
+          // recordArray = [[key,{record}],[key,{record}],...]
+          // let recordArray = [];
+          // for (let key in records) {
+          //   if (records.hasOwnProperty(key)) {
+          //     recordArray.push([key, records[key]]);
+          //   }
+          // }
           //  merge array
+          //  mergeArray = [{recordId,...recorddata},...]
           let mergeArray = [];
           for (let key in records) {
             if (records.hasOwnProperty(key)) {
@@ -146,11 +137,6 @@ class App extends Component {
         })).catch(function (error) {
           console.log("axios request error", error);
         });
-      //get list employee
-      // let employeeString = `https://firstfirebase-ffcda.firebaseio.com/user/UU8KHimAC6YF7O7ukZpMAx3kRsR2.json?auth=${idToken}`;
-      // axios.get(employeeString).then((result) => {
-      //   console.log(result);
-      // });
     });
     //null because not setstate before, log before axios get done (async)
     // console.log(this.state.listRecord);
@@ -167,6 +153,7 @@ class App extends Component {
       this.updateList(user);
     });
   }
+  //reset state when logout
   reset = () => {
     this.setState({
       currentUser: {},

@@ -5,6 +5,7 @@ import '../css/RecordTable.css'
 import AddRecord from '../components/AddRecord'
 import DeleteRecord from '../components/DeleteRecord'
 import UpdateRecord from '../components/UpdateRecord'
+import StopRecord from '../components/StopRecord'
 export default class RecordTable extends Component {
     render() {
         const { readOnly } = this.props;
@@ -85,17 +86,18 @@ export default class RecordTable extends Component {
             {
                 Header: "Action",
                 Cell: props => {
+                    const endtime = props.original.endtime;
                     return (<div className="action-group">
                         {/* <button
                             onClick={() => {
-                                console.log(props.original);
+                                console.log(props.original.endtime);
                             }}
                         >Delete</button> */}
+                        {!endtime && <StopRecord record={props.original} update={this.props.update} />}
                         <UpdateRecord readOnly={true} record={props.original} />
                         <UpdateRecord readOnly={false} record={props.original} update={this.props.update} />
                         <DeleteRecord recordId={props.original.recordId} update={this.props.update} />
                     </div>
-
                     )
                 },
                 sortable: false,
