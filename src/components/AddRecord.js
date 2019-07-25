@@ -124,7 +124,7 @@ class AddRecord extends React.Component {
                         }
                         console.log(mergeArray);
                         //
-                        var myS = "18:04";
+                        var myS = "18:01";
                         var myE = "19:00";
                         console.log(myS, myE);
                         var isDuplicate = false;
@@ -136,7 +136,7 @@ class AddRecord extends React.Component {
                                 isDuplicate = true;
                             }
                         }
-
+                        console.log(isDuplicate);
                         // var s = mergeArray[1].starttime;
                         // var e = mergeArray[1].endtime;
                         // console.log(s, e);
