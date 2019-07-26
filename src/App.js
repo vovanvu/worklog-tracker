@@ -27,28 +27,24 @@ class App extends Component {
     super(props);
     this.state = {
       //init for render value, otherwise render() get null
-      currentUser: {},
       listRecord: [],
       listEmployee: [],
       currentEmployee: '',
       currentEmployeeRecord: []
     }
   }
-  setCurrentEmployee = (employeeId) => {
-    this.setState({ currentEmployee: employeeId }, () => {
+  setCurrentEmployee = (uid) => {
+    this.setState({ currentEmployee: uid }, () => {
       this.updateCurrentEmployeeRecord();
     });
   }
   updateCurrentEmployeeRecord = () => {
     let user = firebase.auth().currentUser;
-    user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
       const { currentEmployee } = this.state;
       user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
         let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${currentEmployee}.json?auth=${idToken}`;
         axios.get(recordString).then((recordRes) => {
-
           let records = recordRes.data;
-          //  merge array
           //  mergeArray = [{recordId,...recorddata},...]
           let mergeArray = [];
           for (let key in records) {
@@ -61,26 +57,42 @@ class App extends Component {
           this.setState({ currentEmployeeRecord: mergeArray });
         })
       })
-    });
   }
-
-  getListEmployee(user) {
+   async getEmployeeFromId(id){
+            let idToken = await firebase.auth().currentUser.getIdToken(/* forceRefresh */ true);
+            const employeeInfoString = 
+          `https://firstfirebase-ffcda.firebaseio.com/user.json?orderBy="id"&equalTo=${id}&print=pretty&auth=${idToken}`;
+            let result =  await axios.get(employeeInfoString);
+            const employees = result.data;
+            for (let key in employees) {
+                    if (employees.hasOwnProperty(key)) {
+                            var employee = employees[key];
+                            employee['uid'] = key;
+                            return employee;
+                        }
+              }
+  }
+  updateListEmployee(user){
     user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
       let uid = user.uid;
-      // get list employee
       let employeeString = `https://firstfirebase-ffcda.firebaseio.com/user/${uid}/employee.json?auth=${idToken}`;
-      axios.get(employeeString).then((result) => {
-        //
-        const empData = result.data;
-        let empArray = [];
-        for (let key in empData) {
-          if (empData.hasOwnProperty(key)) {
-            empArray.push(key);
+        axios.get(employeeString)
+        .then((employeeRes) => {
+          //list employee
+          const empData = employeeRes.data;
+          for (let key in empData) {
+            if (empData.hasOwnProperty(key)) {
+              const emp =  this.getEmployeeFromId(key);
+              emp.then((data)=>{
+                this.setState({
+                  listEmployee: [...this.state.listEmployee,data]
+                })
+              });
+            }
           }
-        }
-      }).catch(function (error) {
-        console.log("axios request error", error);
-      });
+        }).catch(function (error) {
+          console.log("axios request error", error);
+        });
     });
   }
   updateList(user) {
@@ -92,27 +104,10 @@ class App extends Component {
       //khong co quyen tao user voi uid cua minh
       let uid = user.uid;
       let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?auth=${idToken}`;
-      let userString = `https://firstfirebase-ffcda.firebaseio.com/user/${uid}.json?auth=${idToken}`;
-      let employeeString = `https://firstfirebase-ffcda.firebaseio.com/user/${uid}/employee.json?auth=${idToken}`;
-
-      axios.all([
-        axios.get(userString),
-        axios.get(recordString),
-        axios.get(employeeString)
-      ])
-        .then(axios.spread((userRes, recordRes, employeeRes) => {
+        axios.get(recordString)
+        .then(( recordRes) => {
           //  convert record response json to array
           let records = recordRes.data;
-          //  convert record response json to array,
-          // recordArray = [[key,{record}],[key,{record}],...]
-          // let recordArray = [];
-          // for (let key in records) {
-          //   if (records.hasOwnProperty(key)) {
-          //     recordArray.push([key, records[key]]);
-          //   }
-          // }
-          //  merge array
-          //  mergeArray = [{recordId,...recorddata},...]
           let mergeArray = [];
           for (let key in records) {
             if (records.hasOwnProperty(key)) {
@@ -121,48 +116,37 @@ class App extends Component {
               mergeArray.push(record);
             }
           }
-          //list employee
-          const empData = employeeRes.data;
-          let empArray = [];
-          for (let key in empData) {
-            if (empData.hasOwnProperty(key)) {
-              empArray.push({ 'employeeId': key });
-            }
-          }
           this.setState({
-            currentUser: userRes.data,
-            listRecord: mergeArray,
-            listEmployee: empArray
-          })
-        })).catch(function (error) {
+            listRecord: mergeArray
+          });
+        }).catch(function (error) {
           console.log("axios request error", error);
         });
     });
-    //null because not setstate before, log before axios get done (async)
-    // console.log(this.state.listRecord);
   }
 
   //update function to call from child component
   update = () => {
-    let user = firebase.auth().currentUser;
+    const user = firebase.auth().currentUser;
     this.updateList(user);
   }
 
   componentDidMount() {
     firebase.auth().onAuthStateChanged((user) => {
       this.updateList(user);
+      this.updateListEmployee(user);
     });
   }
   //reset state when logout
   reset = () => {
     this.setState({
-      currentUser: {},
       listRecord: [],
       listEmployee: [],
       currentEmployee: '',
       currentEmployeeRecord: []
     });
   }
+
   render() {
     const {
       user,
@@ -170,7 +154,6 @@ class App extends Component {
       signInWithGoogle
     } = this.props;
     const { listRecord, listEmployee, currentEmployee, currentEmployeeRecord } = this.state;
-
     return (
       <Router>
         <Container>
@@ -179,8 +162,6 @@ class App extends Component {
               user
                 ?
                 <div>
-                  {/* <p>Manager: {currentUser.managerid}</p>
-                  <p>Permission: {currentUser.permission}</p> */}
                   <TopMenu user={user} signOut={signOut} reset={this.reset} />
                   <Route
                     path='/' exact

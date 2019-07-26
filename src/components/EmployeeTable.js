@@ -4,15 +4,26 @@ import 'react-table/react-table.css'
 import RecordTable from '../components/RecordTable'
 import { Col, Row, Button } from 'reactstrap'
 export default class EmployeeTable extends Component {
+    getIdFromUid(uid){
+        const {listEmployee} = this.props;
+        const result = listEmployee.filter(emp=>emp.uid=uid);
+        return result;
+    }
     render() {
-        const { currentEmployee, listRecord, setCurrentEmployee } = this.props;
         const columns = [
             {
-                Header: "Employee ID",
-                accessor: "employeeId",
-                width: 300,
-                minWidth: 300,
-                maxWidth: 300
+                Header: "ID",
+                accessor: "id",
+                width: 150,
+                minWidth: 150,
+                maxWidth: 150
+            },
+            {
+                Header: "Name",
+                accessor: "name",
+                width: 150,
+                minWidth: 150,
+                maxWidth: 150
             },
             {
                 Header: "",
@@ -24,8 +35,8 @@ export default class EmployeeTable extends Component {
                     return (<div className="action-group">
                         <Button color="primary"
                             onClick={() => {
-                                const employeeId = props.original.employeeId;
-                                setCurrentEmployee(employeeId);
+                                const uid = props.original.uid;
+                                setCurrentEmployee(uid);
                             }}
                         >Select</Button>
                     </div>
@@ -34,14 +45,16 @@ export default class EmployeeTable extends Component {
                 }
             }
         ]
+        const { currentEmployee, listRecord, setCurrentEmployee,listEmployee } = this.props;
+        console.log(`render`,listEmployee)
         return (
             <div>
                 <Row>
                     <Col md={5}>
-                        <p>Select Employee</p>
+                        <p>Select Employee: {listEmployee.length}</p>
                         <ReactTable
                             columns={columns}
-                            data={this.props.listEmployee}
+                            data={listEmployee}
                             filterable
                             sortable={false}
                             defaultPageSize={10}
