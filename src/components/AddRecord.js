@@ -17,7 +17,8 @@ class AddRecord extends React.Component {
             endtime: '',
             errors: {},
             addStatus: 0, //0: default, 1: add process, 2: add complete
-            isAutoAdd: false
+            isAutoAdd: false,
+            timeArray: []
         };
 
         this.toggle = this.toggle.bind(this);
@@ -39,6 +40,7 @@ class AddRecord extends React.Component {
                 addStatus: 0, //0: default, 1: add process, 2: add complete
                 isAutoAdd: false
             });
+        !modal && this.setTimeArrayToday();
     }
 
     handleFormSubmit = (e) => {
@@ -86,6 +88,7 @@ class AddRecord extends React.Component {
         today = dd + '/' + mm + '/' + yyyy;
         return today;
     }
+
     handleClearForm = (e) => {
         this.setState({
             title: '',
@@ -96,63 +99,46 @@ class AddRecord extends React.Component {
             addStatus: 0
         });
     }
-    componentDidMount() {
-        this.getLastEndTimeToday();
-    }
-    //
-    //get the last record's end time today, not allow multi task
-    getLastEndTimeToday() {
-        if (!this.handleValidation()) {
-            this.setState({
-                addStatus: 1
-            })
-            firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
-                let uid = firebase.auth().currentUser.uid;
-                var today = this.getToday();
-                let a = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?orderBy="date"&equalTo="${today}"&print=pretty&auth=${idToken}`;
-                axios.get(a)
-                    .then((rs) => {
-                        const records = rs.data;
-                        let mergeArray = [];
-                        for (let key in records) {
-                            if (records.hasOwnProperty(key)) {
-                                var starttime = records[key].starttime;
-                                var endtime = records[key].endtime;
-                                var time = { starttime: starttime, endtime: endtime };
-                                mergeArray.push(time);
-                            }
-                        }
-                        console.log(mergeArray);
-                        //
-                        var myS = "18:01";
-                        var myE = "19:00";
-                        console.log(myS, myE);
-                        var isDuplicate = false;
-                        for (let i = 0; i < mergeArray.length; i++) {
-                            if (myS < mergeArray[i].starttime && myE > mergeArray[i].starttime) {
-                                isDuplicate = true;
-                            }
-                            if (myS < mergeArray[i].endtime && myE > mergeArray[i].endtime) {
-                                isDuplicate = true;
-                            }
-                        }
-                        console.log(isDuplicate);
-                        // var s = mergeArray[1].starttime;
-                        // var e = mergeArray[1].endtime;
-                        // console.log(s, e);
-
-                        // if (myS < s && myE > s) {
-                        //     console.log("duplicate before");
-                        // }
-                        // if (myS < e && myE > e) {
-                        //     console.log("duplicate after");
-                        // }
-                    });
-            });
+    //check time is overlap with the other
+    isOverlapRecordTime(starttime, endtime) {
+        let isOverlap = false;
+        const { timeArray } = this.state;
+        for (let i = 0; i < timeArray.length; i++) {
+            if (starttime < timeArray[i].starttime && endtime > timeArray[i].starttime) {
+                isOverlap = true;
+            }
+            if (starttime < timeArray[i].endtime && endtime > timeArray[i].endtime) {
+                isOverlap = true;
+            }
+            if (starttime === timeArray[i].starttime && endtime === timeArray[i].endtime) {
+                isOverlap = true;
+            }
         }
+        return isOverlap;
     }
-    //
-    //
+    //set Time array today to check overlap
+    setTimeArrayToday() {
+        firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
+            let uid = firebase.auth().currentUser.uid;
+            const today = this.getToday();
+            let a = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?orderBy="date"&equalTo="${today}"&print=pretty&auth=${idToken}`;
+            axios.get(a).then((rs) => {
+                const records = rs.data;
+                let timeArray = [];
+                for (let key in records) {
+                    if (records.hasOwnProperty(key)) {
+                        let starttime = records[key].starttime;
+                        let endtime = records[key].endtime;
+                        let time = { starttime: starttime, endtime: endtime };
+                        timeArray.push(time);
+                    }
+                }
+                this.setState({
+                    timeArray: timeArray
+                })
+            });
+        });
+    }
     handleValidation() {
         const { starttime, endtime, isAutoAdd } = this.state;
         let { title } = this.state;
@@ -177,6 +163,12 @@ class AddRecord extends React.Component {
                 if (!validTime) {
                     formIsValid = false;
                     errors["endtime"] = "End time must be after start time";
+                } else {
+                    const isOverlapTime = this.isOverlapRecordTime(starttime, endtime);
+                    if (isOverlapTime) {
+                        formIsValid = false;
+                        errors["endtime"] = "Time is overlap with other record";
+                    }
                 }
             }
         }
@@ -210,58 +202,92 @@ class AddRecord extends React.Component {
             :
             this.setState({ isAutoAdd: false });
     }
+
+    hasRecordOnActive() {
+        var isHas = false;
+        const { timeArray } = this.state;
+        var today = new Date();
+        var hh = String(today.getHours()).padStart(2, '0');
+        var mm = String(today.getMinutes()).padStart(2, '0');
+        var time = hh + ":" + mm;
+        for (let i = 0; i < timeArray.length; i++) {
+            if (time > timeArray[i].starttime && time < timeArray[i].endtime) {
+                isHas = true;
+                return isHas;
+            }
+        }
+    }
+    hasAutomaticRecordOnActive() {
+        var isHas = false;
+        const { timeArray } = this.state;
+        for (let i = 0; i < timeArray.length; i++) {
+            if (timeArray[i].endtime === '') {
+                isHas = true;
+                return isHas;
+            }
+        }
+    }
     render() {
         const { addStatus, title, description, starttime, endtime, errors, isAutoAdd } = this.state;
+        const hasRecordOnActive = this.hasRecordOnActive();
+        const hasAutomaticRecordOnActive = this.hasAutomaticRecordOnActive();
         return (
             <div>
                 <Button id="btn-add" color="primary" onClick={this.toggle}><FaPlus /> Add Record</Button>
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
-                    <ModalHeader toggle={this.toggle}>Add New Record</ModalHeader>
-                    <ModalBody>
-                        <Form onSubmit={this.handleFormSubmit}>
-                            <FormGroup check>
-                                <Label check>
-                                    <Input type="checkbox" onChange={this.handleAutoCheck} />
-                                    <span title="Add a record with start time is time when you click Add Record, you can stop it in future to get end time">Automatic Add</span>
-                                </Label>
-                            </FormGroup>
-                            <FormGroup>
-                                <Label for="text">Title</Label>
-                                <Input type="text" name="title" value={title} onChange={this.handleChange} />
-                                <span style={{ color: "red" }}>{errors["title"]}</span>
-                            </FormGroup>
-                            <FormGroup>
-                                <FormGroup>
-                                    <Label for="exampleText">Descriptipn</Label>
-                                    <Input type="textarea" name="description" value={description} onChange={this.handleChange} />
-                                </FormGroup>
-                            </FormGroup>
-                            {!isAutoAdd &&
-                                <div>
-                                    <FormGroup>
-                                        <Label for="exampleTime">Start Time</Label>
-                                        <Input value={starttime}
-                                            type="time"
-                                            name="starttime" onChange={this.handleChange}
-                                        />
-                                        <span style={{ color: "red" }}>{errors["starttime"]}</span>
+                    {hasAutomaticRecordOnActive ? <ModalHeader toggle={this.toggle} >You must stop your current Automatic Record to add new Record</ModalHeader> :
+                        <div>
+                            <ModalHeader toggle={this.toggle}>Add New Record</ModalHeader>
+                            <ModalBody>
+                                <Form onSubmit={this.handleFormSubmit}>
+                                    <FormGroup check>
+                                        <Label check>
+                                            {hasRecordOnActive ? <span className="text-warning">Can not use Automatic Add, you have a record on active</span> :
+                                                <div>
+                                                    <Input type="checkbox" onChange={this.handleAutoCheck} />
+                                                    <span title="Add a record with start time is time when you click Add Record, you can stop it in future to get end time">Automatic Add</span>
+                                                </div>
+                                            }
+                                        </Label>
                                     </FormGroup>
                                     <FormGroup>
-                                        <Label for="exampleTime">End Time</Label>
-                                        <Input value={endtime}
-                                            type="time"
-                                            name="endtime" onChange={this.handleChange}
-                                        />
-                                        <span style={{ color: "red" }}>{errors["endtime"]}</span>
+                                        <Label for="text">Title</Label>
+                                        <Input type="text" name="title" value={title} onChange={this.handleChange} />
+                                        <span style={{ color: "red" }}>{errors["title"]}</span>
                                     </FormGroup>
-                                </div>}
-                            <Button color="primary" onClick={this.handleFormSubmit}>Add Record</Button>{' '}
-                            <Button color="secondary" onClick={this.handleClearForm}>Clear</Button>{' '}
-                            <Button color="secondary" onClick={this.toggle}>Cancel</Button>
-                            {addStatus === 1 ? <p className="text-success">Processing...</p> : ''}
-                            {addStatus === 2 ? <p className="text-success">Add Complete!</p> : ' '}
-                        </Form>
-                    </ModalBody>
+                                    <FormGroup>
+                                        <FormGroup>
+                                            <Label for="exampleText">Descriptipn</Label>
+                                            <Input type="textarea" name="description" value={description} onChange={this.handleChange} />
+                                        </FormGroup>
+                                    </FormGroup>
+                                    {!isAutoAdd &&
+                                        <div>
+                                            <FormGroup>
+                                                <Label for="exampleTime">Start Time</Label>
+                                                <Input value={starttime}
+                                                    type="time"
+                                                    name="starttime" onChange={this.handleChange}
+                                                />
+                                                <span style={{ color: "red" }}>{errors["starttime"]}</span>
+                                            </FormGroup>
+                                            <FormGroup>
+                                                <Label for="exampleTime">End Time</Label>
+                                                <Input value={endtime}
+                                                    type="time"
+                                                    name="endtime" onChange={this.handleChange}
+                                                />
+                                                <span style={{ color: "red" }}>{errors["endtime"]}</span>
+                                            </FormGroup>
+                                        </div>}
+                                    <Button color="primary" onClick={this.handleFormSubmit}>Add Record</Button>{' '}
+                                    <Button color="secondary" onClick={this.handleClearForm}>Clear</Button>{' '}
+                                    <Button color="secondary" onClick={this.toggle}>Cancel</Button>
+                                    {addStatus === 1 ? <p className="text-success">Processing...</p> : ''}
+                                    {addStatus === 2 ? <p className="text-success">Add Complete!</p> : ' '}
+                                </Form>
+                            </ModalBody>
+                        </div>}
                 </Modal>
             </div>
         );

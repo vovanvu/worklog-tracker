@@ -7,6 +7,14 @@ import DeleteRecord from '../components/DeleteRecord'
 import UpdateRecord from '../components/UpdateRecord'
 import StopRecord from '../components/StopRecord'
 export default class RecordTable extends Component {
+    getToday() {
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var yyyy = today.getFullYear();
+        today = dd + '/' + mm + '/' + yyyy;
+        return today;
+    }
     render() {
         const { readOnly } = this.props;
         const columnForRead = [
@@ -54,9 +62,9 @@ export default class RecordTable extends Component {
             {
                 Header: "Record ID",
                 accessor: "recordId",
-                width: 300,
-                minWidth: 300,
-                maxWidth: 300
+                width: 250,
+                minWidth: 250,
+                maxWidth: 250
             },
             {
                 Header: "Title",
@@ -64,10 +72,11 @@ export default class RecordTable extends Component {
             },
             {
                 Header: "Date",
+                id: 'date',
                 accessor: "date",
-                width: 100,
-                minWidth: 100,
-                maxWidth: 100
+                width: 150,
+                minWidth: 150,
+                maxWidth: 150
             },
             {
                 Header: "Start Time",
@@ -109,6 +118,7 @@ export default class RecordTable extends Component {
         ]
         let columns = '';
         readOnly ? columns = columnForRead : columns = columnsForAction;
+        const today = this.getToday();
         return (
             <div>
                 {!readOnly && <AddRecord update={this.props.update} />}
@@ -117,9 +127,15 @@ export default class RecordTable extends Component {
                     data={this.props.listRecord}
                     filterable
                     defaultPageSize={10}
+                    defaultFiltered={[
+                        {
+                            id: 'date',
+                            value: today
+                        }
+                    ]}
                 >
                 </ReactTable >
-            </div>
+            </div >
         );
     }
 }

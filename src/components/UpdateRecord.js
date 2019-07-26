@@ -21,6 +21,8 @@ class UpdateRecord extends React.Component {
             endtime: endtime,
             errors: {},
             updateStatus: 0 //0: default, 1: update process, 2: update complete
+            ,
+            timeArray: []
         };
         this.toggle = this.toggle.bind(this);
     }
@@ -29,13 +31,17 @@ class UpdateRecord extends React.Component {
         this.setState(prevState => ({
             modal: !prevState.modal, updateStatus: 0
         }));
-        const { title, description, starttime, endtime } = this.props.record;
-        this.setState({
+        const { title, description, starttime, endtime, date } = this.props.record;
+        const { modal } = this.state;
+        !modal && this.setState({
             title: title,
             description: description,
             starttime: starttime,
-            endtime: endtime
+            endtime: endtime,
+            errors: {},
+            updateStatus: 0
         });
+        !modal && this.setTimeArrayToday(date);
     }
     handleFormSubmit = (e) => {
         const { record } = this.props;
@@ -98,6 +104,12 @@ class UpdateRecord extends React.Component {
             if (!validTime) {
                 formIsValid = false;
                 errors["endtime"] = "End time must be after start time";
+            } else {
+                const isOverlapTime = this.isOverlapRecordTime(starttime, endtime);
+                if (isOverlapTime) {
+                    formIsValid = false;
+                    errors["endtime"] = "Time is overlap with other record";
+                }
             }
         }
         this.setState({ errors: errors });
@@ -118,6 +130,45 @@ class UpdateRecord extends React.Component {
             return true;
         }
         return false;
+    }
+    //set Time array today to check overlap
+    setTimeArrayToday(today) {
+        firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
+            let uid = firebase.auth().currentUser.uid;
+            let a = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?orderBy="date"&equalTo="${today}"&print=pretty&auth=${idToken}`;
+            axios.get(a).then((rs) => {
+                const records = rs.data;
+                let timeArray = [];
+                for (let key in records) {
+                    if (records.hasOwnProperty(key)) {
+                        let starttime = records[key].starttime;
+                        let endtime = records[key].endtime;
+                        let time = { starttime: starttime, endtime: endtime };
+                        timeArray.push(time);
+                    }
+                }
+                this.setState({
+                    timeArray: timeArray
+                })
+            });
+        });
+    }
+    //check time is overlap with the other
+    isOverlapRecordTime(starttime, endtime) {
+        let isOverlap = false;
+        const { timeArray } = this.state;
+        for (let i = 0; i < timeArray.length; i++) {
+            if (starttime < timeArray[i].starttime && endtime > timeArray[i].starttime) {
+                isOverlap = true;
+            }
+            if (starttime < timeArray[i].endtime && endtime > timeArray[i].endtime) {
+                isOverlap = true;
+            }
+            if (starttime === timeArray[i].starttime && endtime === timeArray[i].endtime) {
+                isOverlap = true;
+            }
+        }
+        return isOverlap;
     }
     render() {
         const { updateStatus, title, description, starttime, endtime, errors, readOnly } = this.state;
