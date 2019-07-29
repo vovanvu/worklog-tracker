@@ -33,59 +33,59 @@ class App extends Component {
       currentEmployeeRecord: []
     }
   }
-  setCurrentEmployee = (uid) => {
-    this.setState({ currentEmployee: uid }, () => {
+  setCurrentEmployee = (employee) => {
+    this.setState({ currentEmployee: employee }, () => {
       this.updateCurrentEmployeeRecord();
     });
   }
   updateCurrentEmployeeRecord = () => {
     let user = firebase.auth().currentUser;
-      const { currentEmployee } = this.state;
-      user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
-        let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${currentEmployee}.json?auth=${idToken}`;
-        axios.get(recordString).then((recordRes) => {
-          let records = recordRes.data;
-          //  mergeArray = [{recordId,...recorddata},...]
-          let mergeArray = [];
-          for (let key in records) {
-            if (records.hasOwnProperty(key)) {
-              var record = records[key];
-              record['recordId'] = key;
-              mergeArray.push(record);
-            }
+    const { currentEmployee } = this.state;
+    user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
+      let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${currentEmployee.uid}.json?auth=${idToken}`;
+      axios.get(recordString).then((recordRes) => {
+        let records = recordRes.data;
+        //  mergeArray = [{recordId,...recorddata},...]
+        let mergeArray = [];
+        for (let key in records) {
+          if (records.hasOwnProperty(key)) {
+            var record = records[key];
+            record['recordId'] = key;
+            mergeArray.push(record);
           }
-          this.setState({ currentEmployeeRecord: mergeArray });
-        })
+        }
+        this.setState({ currentEmployeeRecord: mergeArray });
       })
+    })
   }
-   async getEmployeeFromId(id){
-            let idToken = await firebase.auth().currentUser.getIdToken(/* forceRefresh */ true);
-            const employeeInfoString = 
-          `https://firstfirebase-ffcda.firebaseio.com/user.json?orderBy="id"&equalTo=${id}&print=pretty&auth=${idToken}`;
-            let result =  await axios.get(employeeInfoString);
-            const employees = result.data;
-            for (let key in employees) {
-                    if (employees.hasOwnProperty(key)) {
-                            var employee = employees[key];
-                            employee['uid'] = key;
-                            return employee;
-                        }
-              }
+  async getEmployeeFromId(id) {
+    let idToken = await firebase.auth().currentUser.getIdToken(/* forceRefresh */ true);
+    const employeeInfoString =
+      `https://firstfirebase-ffcda.firebaseio.com/user.json?orderBy="id"&equalTo=${id}&print=pretty&auth=${idToken}`;
+    let result = await axios.get(employeeInfoString);
+    const employees = result.data;
+    for (let key in employees) {
+      if (employees.hasOwnProperty(key)) {
+        var employee = employees[key];
+        employee['uid'] = key;
+        return employee;
+      }
+    }
   }
-  updateListEmployee(user){
+  updateListEmployee(user) {
     user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
       let uid = user.uid;
       let employeeString = `https://firstfirebase-ffcda.firebaseio.com/user/${uid}/employee.json?auth=${idToken}`;
-        axios.get(employeeString)
+      axios.get(employeeString)
         .then((employeeRes) => {
           //list employee
           const empData = employeeRes.data;
           for (let key in empData) {
             if (empData.hasOwnProperty(key)) {
-              const emp =  this.getEmployeeFromId(key);
-              emp.then((data)=>{
+              const emp = this.getEmployeeFromId(key);
+              emp.then((data) => {
                 this.setState({
-                  listEmployee: [...this.state.listEmployee,data]
+                  listEmployee: [...this.state.listEmployee, data]
                 })
               });
             }
@@ -104,8 +104,8 @@ class App extends Component {
       //khong co quyen tao user voi uid cua minh
       let uid = user.uid;
       let recordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?auth=${idToken}`;
-        axios.get(recordString)
-        .then(( recordRes) => {
+      axios.get(recordString)
+        .then((recordRes) => {
           //  convert record response json to array
           let records = recordRes.data;
           let mergeArray = [];

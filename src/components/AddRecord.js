@@ -66,8 +66,10 @@ class AddRecord extends React.Component {
                 axios.post(addRecordString, { title, description, starttime, endtime, date })
                     .then(() => {
                         this.setState({
-                            addStatus: 2
+                            addStatus: 2,
+                            modal: false
                         })
+
                         //update App.js list record from function passed in props
                         const { update } = this.props;
                         update();

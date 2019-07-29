@@ -4,9 +4,9 @@ import 'react-table/react-table.css'
 import RecordTable from '../components/RecordTable'
 import { Col, Row, Button } from 'reactstrap'
 export default class EmployeeTable extends Component {
-    getIdFromUid(uid){
-        const {listEmployee} = this.props;
-        const result = listEmployee.filter(emp=>emp.uid=uid);
+    getIdFromUid(uid) {
+        const { listEmployee } = this.props;
+        const result = listEmployee.filter(emp => emp.uid = uid);
         return result;
     }
     render() {
@@ -35,8 +35,10 @@ export default class EmployeeTable extends Component {
                     return (<div className="action-group">
                         <Button color="primary"
                             onClick={() => {
-                                const uid = props.original.uid;
-                                setCurrentEmployee(uid);
+                                // const uid = props.original.uid;
+                                // setCurrentEmployee(uid);
+                                const employee = props.original;
+                                setCurrentEmployee(employee);
                             }}
                         >Select</Button>
                     </div>
@@ -45,13 +47,12 @@ export default class EmployeeTable extends Component {
                 }
             }
         ]
-        const { currentEmployee, listRecord, setCurrentEmployee,listEmployee } = this.props;
-        console.log(`render`,listEmployee)
+        const { currentEmployee, listRecord, setCurrentEmployee, listEmployee } = this.props;
         return (
             <div>
                 <Row>
                     <Col md={5}>
-                        <p>Select Employee: {listEmployee.length}</p>
+                        <p>Select Employee. Total: {listEmployee.length}</p>
                         <ReactTable
                             columns={columns}
                             data={listEmployee}
@@ -62,7 +63,7 @@ export default class EmployeeTable extends Component {
                         </ReactTable >
                     </Col>
                     <Col md={7}>
-                        {currentEmployee ? <p>{currentEmployee}'s Records</p> : <p>No employee selected</p>}
+                        {currentEmployee ? <p><b>{currentEmployee.id} - {currentEmployee.name}</b>  Record</p> : <p>No employee selected</p>}
                         <RecordTable listRecord={listRecord} readOnly={true} />
                     </Col>
                 </Row>
