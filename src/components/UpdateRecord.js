@@ -56,7 +56,7 @@ class UpdateRecord extends React.Component {
                 let updateRecordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}/${recordId}.json?auth=${idToken}`;
 
                 axios.patch(updateRecordString, { title, description, starttime, endtime })
-                    .then((result) => {
+                    .then(() => {
                         this.setState({
                             updateStatus: 2
                         })
@@ -158,14 +158,18 @@ class UpdateRecord extends React.Component {
         let isOverlap = false;
         const { timeArray } = this.state;
         for (let i = 0; i < timeArray.length; i++) {
-            if (starttime < timeArray[i].starttime && endtime > timeArray[i].starttime) {
-                isOverlap = true;
-            }
-            if (starttime < timeArray[i].endtime && endtime > timeArray[i].endtime) {
-                isOverlap = true;
-            }
-            if (starttime === timeArray[i].starttime && endtime === timeArray[i].endtime) {
-                isOverlap = true;
+            //skip selected current update record
+            const isCurrentRecord = timeArray[i].starttime === starttime || timeArray[i].endtime === endtime;
+            if (!(isCurrentRecord)) {
+                if (starttime < timeArray[i].starttime && endtime > timeArray[i].starttime) {
+                    isOverlap = true;
+                }
+                if (starttime < timeArray[i].endtime && endtime > timeArray[i].endtime) {
+                    isOverlap = true;
+                }
+                if (starttime === timeArray[i].starttime && endtime === timeArray[i].endtime) {
+                    isOverlap = true;
+                }
             }
         }
         return isOverlap;

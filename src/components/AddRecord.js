@@ -42,7 +42,21 @@ class AddRecord extends React.Component {
             });
         !modal && this.setTimeArrayToday();
     }
-
+    dateStringToMilliseconds(dateString) {
+        var dateArr = dateString.split("/");
+        var day = dateArr[0];
+        var month = dateArr[1];
+        var year = dateArr[2];
+        return new Date(year, month, day).getTime();;
+    }
+    millisecondsToDateString(ms) {
+        var today = new Date(ms);
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth()).padStart(2, '0'); //January is 0!
+        var yyyy = today.getFullYear();
+        today = dd + '/' + mm + '/' + yyyy;
+        return today;
+    }
     handleFormSubmit = (e) => {
         if (this.handleValidation()) {
             this.setState({
@@ -50,7 +64,8 @@ class AddRecord extends React.Component {
             })
             const { title, description } = this.state;
             let { starttime, endtime, isAutoAdd } = this.state;
-            const date = this.getToday();
+            let date = this.getToday();
+            date = this.dateStringToMilliseconds(date);
             firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
                 let uid = firebase.auth().currentUser.uid;
                 let addRecordString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?auth=${idToken}`;
@@ -122,8 +137,9 @@ class AddRecord extends React.Component {
     setTimeArrayToday() {
         firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
             let uid = firebase.auth().currentUser.uid;
-            const today = this.getToday();
-            let a = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?orderBy="date"&equalTo="${today}"&print=pretty&auth=${idToken}`;
+            let today = this.getToday();
+            today = this.dateStringToMilliseconds(today);
+            let a = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?orderBy="date"&equalTo=${today}&print=pretty&auth=${idToken}`;
             axios.get(a).then((rs) => {
                 const records = rs.data;
                 let timeArray = [];
