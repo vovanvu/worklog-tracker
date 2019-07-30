@@ -144,7 +144,6 @@ export default class EmployeeTable extends Component {
         }
     }
     render() {
-        console.log(this.state.excelArray)
         const columns = [
             {
                 Header: "ID",
