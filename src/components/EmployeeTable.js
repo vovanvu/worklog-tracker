@@ -61,10 +61,6 @@ export default class EmployeeTable extends Component {
             for (let i = 0; i < dateArray.length; i++) {
                 const date = dateArray[i];
                 const totalTime = await this.getDateTotalTime(dateArray[i]);
-<<<<<<< HEAD
-=======
-                console.log(totalTime);
->>>>>>> ca35ed0d6375f44c017cfe31430a1c50936a24bc
                 let excelRow = {};
                 excelRow.name = name;
                 excelRow.id = id;
