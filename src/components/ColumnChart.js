@@ -7,7 +7,7 @@ class ColumnChart extends Component {
         const { chartArrayData } = this.props;
         const options = {
             title: {
-                text: "Record Chart 28-30/7"
+                text: "Total Time Chart"
             },
             animationEnabled: true,
             data: [

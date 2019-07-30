@@ -9,13 +9,17 @@
     "firebase": "^6.3.0",
     "jquery": "^3.4.1",
     "react": "^16.8.6",
+    "react-data-export": "^0.5.0",
+    "react-day-picker": "^7.3.0",
     "react-dom": "^16.8.6",
+    "react-export-excel": "^0.5.3",
     "react-icons": "^3.7.0",
     "react-router-dom": "^5.0.1",
     "react-scripts": "3.0.1",
     "react-table": "^6.10.0",
     "react-with-firebase-auth": "^1.0.3",
-    "reactstrap": "^8.0.1"
+    "reactstrap": "^8.0.1",
+    "xlsx": "^0.14.4"
   },
   "scripts": {
     "start": "react-scripts start",

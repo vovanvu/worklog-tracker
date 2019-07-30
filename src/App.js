@@ -8,7 +8,7 @@ import TopMenu from './components/TopMenu'
 import RecordTable from './components/RecordTable'
 import EmployeeTable from './components/EmployeeTable'
 import SignIn from './components/SignIn'
-import ColumnChart from './components/ColumnChart'
+import Report from './components/Report'
 //firebase
 import withFirebaseAuth from 'react-with-firebase-auth'
 import * as firebase from 'firebase/app';
@@ -31,8 +31,13 @@ class App extends Component {
       listEmployee: [],
       currentEmployee: '',
       currentEmployeeRecord: [],
-      chartArrayData: []
+      chartArrayData: [],
+      excelArray: [],
+      reportDayStart: this.getToday(),
+      reportDayEnd: this.getToday()
     }
+    this.setChartArrayDataFromDateToDate = this.setChartArrayDataFromDateToDate.bind(this);
+    this.exportExcel = this.exportExcel.bind(this);
   }
   setCurrentEmployee = (employee) => {
     this.setState({ currentEmployee: employee }, () => {
@@ -74,6 +79,14 @@ class App extends Component {
         return employee;
       }
     }
+  }
+  async getEmployeeFromUid(uid) {
+    let idToken = await firebase.auth().currentUser.getIdToken(/* forceRefresh */ true);
+    const employeeInfoString =
+      `https://firstfirebase-ffcda.firebaseio.com/user/${uid}.json?auth=${idToken}`;
+    let result = await axios.get(employeeInfoString);
+    const employee = result.data;
+    return employee;
   }
   updateListEmployee(user) {
     user && firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
@@ -138,10 +151,13 @@ class App extends Component {
   }
 
   componentDidMount() {
+
     firebase.auth().onAuthStateChanged((user) => {
       this.updateList(user);
       this.updateListEmployee(user);
-      this.setChartArrayDataFromDateToDate();
+      const { reportDayStart, reportDayEnd } = this.state;
+      this.setChartArrayDataFromDateToDate(reportDayStart, reportDayEnd);
+      this.exportExcel(reportDayStart, reportDayEnd);
     });
   }
   //reset state when logout
@@ -154,9 +170,24 @@ class App extends Component {
       chartArrayData: []
     });
   }
-  setChartArrayDataFromDateToDate = async () => {
-    let startdate = "28/07/2019";
-    let enddate = "30/07/2019";
+  changeReportDate = (startdate, enddate) => {
+    this.setState({
+      reportDayStart: startdate,
+      reportDayEnd: enddate
+    }, () => {
+      const { reportDayStart, reportDayEnd } = this.state;
+      this.setChartArrayDataFromDateToDate(reportDayStart, reportDayEnd);
+      this.exportExcel(reportDayStart, reportDayEnd);
+    })
+  }
+  async setChartArrayDataFromDateToDate(startdate, enddate) {
+    function isNumeric(n) {
+      return !isNaN(parseFloat(n)) && isFinite(n);
+    }
+    if (isNumeric(startdate) && isNumeric(enddate)) {
+      startdate = this.millisecondsToDateString(startdate);
+      enddate = this.millisecondsToDateString(enddate);
+    }
     startdate = this.dateStringToMilliseconds(startdate);
     enddate = this.dateStringToMilliseconds(enddate);
     const user = firebase.auth().currentUser;
@@ -177,6 +208,7 @@ class App extends Component {
           }
         }
       }
+      console.log(dateArray);
       let chartArrayData = [];
       for (let i = 0; i < dateArray.length; i++) {
         const date = dateArray[i];
@@ -191,6 +223,57 @@ class App extends Component {
       }
       this.setState({
         chartArrayData: chartArrayData
+      }, () => {
+        console.log(this.state.chartArrayData)
+      })
+    }
+  }
+  async exportExcel(startdate, enddate) {
+    function isNumeric(n) {
+      return !isNaN(parseFloat(n)) && isFinite(n);
+    }
+    if (isNumeric(startdate) && isNumeric(enddate)) {
+      startdate = this.millisecondsToDateString(startdate);
+      enddate = this.millisecondsToDateString(enddate);
+    }
+    startdate = this.dateStringToMilliseconds(startdate);
+    enddate = this.dateStringToMilliseconds(enddate);
+    const user = firebase.auth().currentUser;
+    if (user) {
+      const idToken = await firebase.auth().currentUser.getIdToken(/* forceRefresh */ true);
+      let uid = firebase.auth().currentUser.uid;
+      let timeArrayString = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?orderBy="date"&startAt=${startdate}&endAt=${enddate}&print=pretty&auth=${idToken}`;
+      const rs = await axios.get(timeArrayString);
+      const records = rs.data;
+      let dateArray = [];
+      for (let key in records) {
+        if (records.hasOwnProperty(key)) {
+          let record = records[key];
+          let date = record.date;
+          date = this.millisecondsToDateString(date);
+          if (!dateArray.includes(date)) {
+            dateArray.push(date);
+          }
+        }
+      }
+      console.log(dateArray);
+      let chartArrayData = [];
+      var employee = await this.getEmployeeFromUid(user.uid);
+      var id = employee.id;
+      var name = employee.name;
+      for (let i = 0; i < dateArray.length; i++) {
+        const date = dateArray[i];
+        const totalTime = await this.getDateTotalTime(dateArray[i]);
+        let excelRow = {};
+        excelRow.name = name;
+        excelRow.id = id;
+        excelRow.date = date;
+        excelRow.time = totalTime;
+        chartArrayData.push(excelRow);
+      }
+      console.log('excel: ', chartArrayData);
+      this.setState({
+        excelArray: chartArrayData
       })
     }
   }
@@ -245,7 +328,7 @@ class App extends Component {
   millisecondsToDateString(ms) {
     var today = new Date(ms);
     var dd = String(today.getDate()).padStart(2, '0');
-    var mm = String(today.getMonth()).padStart(2, '0'); //January is 0!
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
     var yyyy = today.getFullYear();
     today = dd + '/' + mm + '/' + yyyy;
     return today;
@@ -253,7 +336,7 @@ class App extends Component {
   dateStringToMilliseconds(dateString) {
     var dateArr = dateString.split("/");
     var day = dateArr[0];
-    var month = dateArr[1];
+    var month = dateArr[1] - 1;
     var year = dateArr[2];
     return new Date(year, month, day).getTime();;
   }
@@ -263,7 +346,14 @@ class App extends Component {
       signOut,
       signInWithGoogle
     } = this.props;
-    const { listRecord, listEmployee, currentEmployee, currentEmployeeRecord, chartArrayData } = this.state;
+    const {
+      listRecord,
+      listEmployee,
+      currentEmployee,
+      currentEmployeeRecord,
+      chartArrayData,
+      excelArray
+    } = this.state;
     // this.setChartArrayDataFromDateToDate();
     return (
       <Router>
@@ -295,7 +385,10 @@ class App extends Component {
                   <Route
                     path='/report' exact
                     render={() =>
-                      <ColumnChart chartArrayData={chartArrayData} />
+                      <Report chartArrayData={chartArrayData}
+                        pickDate={this.changeReportDate}
+                        excelArray={excelArray}
+                      />
                     }
                   />
                 </div>

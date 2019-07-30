@@ -42,20 +42,20 @@ class AddRecord extends React.Component {
             });
         !modal && this.setTimeArrayToday();
     }
-    dateStringToMilliseconds(dateString) {
-        var dateArr = dateString.split("/");
-        var day = dateArr[0];
-        var month = dateArr[1];
-        var year = dateArr[2];
-        return new Date(year, month, day).getTime();;
-    }
     millisecondsToDateString(ms) {
         var today = new Date(ms);
         var dd = String(today.getDate()).padStart(2, '0');
-        var mm = String(today.getMonth()).padStart(2, '0'); //January is 0!
+        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
         var yyyy = today.getFullYear();
         today = dd + '/' + mm + '/' + yyyy;
         return today;
+    }
+    dateStringToMilliseconds(dateString) {
+        var dateArr = dateString.split("/");
+        var day = dateArr[0];
+        var month = dateArr[1] - 1;
+        var year = dateArr[2];
+        return new Date(year, month, day).getTime();;
     }
     handleFormSubmit = (e) => {
         if (this.handleValidation()) {
