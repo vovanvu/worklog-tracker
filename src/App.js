@@ -147,7 +147,8 @@ class App extends Component {
   update = () => {
     const user = firebase.auth().currentUser;
     this.updateList(user);
-    this.setChartArrayDataFromDateToDate();
+    const { reportDayStart, reportDayEnd } = this.state;
+    this.setChartArrayDataFromDateToDate(reportDayStart, reportDayEnd);
   }
 
   componentDidMount() {
@@ -167,7 +168,10 @@ class App extends Component {
       listEmployee: [],
       currentEmployee: '',
       currentEmployeeRecord: [],
-      chartArrayData: []
+      chartArrayData: [],
+      excelArray: [],
+      reportDayStart: this.getToday(),
+      reportDayEnd: this.getToday()
     });
   }
   changeReportDate = (startdate, enddate) => {
@@ -208,7 +212,6 @@ class App extends Component {
           }
         }
       }
-      console.log(dateArray);
       let chartArrayData = [];
       for (let i = 0; i < dateArray.length; i++) {
         const date = dateArray[i];
@@ -223,8 +226,6 @@ class App extends Component {
       }
       this.setState({
         chartArrayData: chartArrayData
-      }, () => {
-        console.log(this.state.chartArrayData)
       })
     }
   }
@@ -256,7 +257,6 @@ class App extends Component {
           }
         }
       }
-      console.log(dateArray);
       let chartArrayData = [];
       var employee = await this.getEmployeeFromUid(user.uid);
       var id = employee.id;
@@ -271,7 +271,6 @@ class App extends Component {
         excelRow.time = totalTime;
         chartArrayData.push(excelRow);
       }
-      console.log('excel: ', chartArrayData);
       this.setState({
         excelArray: chartArrayData
       })
@@ -338,7 +337,7 @@ class App extends Component {
     var day = dateArr[0];
     var month = dateArr[1] - 1;
     var year = dateArr[2];
-    return new Date(year, month, day).getTime();;
+    return new Date(year, month, day).getTime();
   }
   render() {
     const {
