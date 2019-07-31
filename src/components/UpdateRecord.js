@@ -135,7 +135,8 @@ class UpdateRecord extends React.Component {
     setTimeArrayToday(today) {
         firebase.auth().currentUser.getIdToken(/* forceRefresh */ true).then((idToken) => {
             let uid = firebase.auth().currentUser.uid;
-            let a = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?orderBy="date"&equalTo="${today}"&print=pretty&auth=${idToken}`;
+            today = this.dateStringToMilliseconds(today);
+            let a = `https://firstfirebase-ffcda.firebaseio.com/record/${uid}.json?orderBy="date"&equalTo=${today}&print=pretty&auth=${idToken}`;
             axios.get(a).then((rs) => {
                 const records = rs.data;
                 let timeArray = [];
@@ -173,6 +174,13 @@ class UpdateRecord extends React.Component {
             }
         }
         return isOverlap;
+    }
+    dateStringToMilliseconds(dateString) {
+        var dateArr = dateString.split("/");
+        var day = dateArr[0];
+        var month = dateArr[1] - 1;
+        var year = dateArr[2];
+        return new Date(year, month, day).getTime();;
     }
     render() {
         const { updateStatus, title, description, starttime, endtime, errors, readOnly } = this.state;
