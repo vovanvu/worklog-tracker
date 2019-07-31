@@ -10,7 +10,7 @@ export default class Report extends Component {
 
                 <p>Select date (limit 3 months prior to today):</p>
                 <ChartDatePicker pickDate={pickDate} />
-                <p>Download Excel:</p>
+                <span>Download Excel: </span>
                 <ExcelExport excelArray={excelArray} />
                 <ColumnChart chartArrayData={chartArrayData} />
             </div>

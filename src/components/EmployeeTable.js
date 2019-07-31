@@ -201,8 +201,9 @@ export default class EmployeeTable extends Component {
                     <Col md={7}>
                         {currentEmployee ?
                             <div><p><b>{currentEmployee.id} - {currentEmployee.name}</b>  Record</p>
+                                <p>Select date (limit 3 months prior to today):</p>
                                 <ChartDatePicker pickDate={this.changeReportDate} />
-                                <p>Download Excel:</p>
+                                <span>Download Excel: </span>
                                 <ExcelExport excelArray={excelArray} />
                             </div>
                             : <p>No employee selected</p>}

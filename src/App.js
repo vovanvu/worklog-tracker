@@ -149,6 +149,7 @@ class App extends Component {
     this.updateList(user);
     const { reportDayStart, reportDayEnd } = this.state;
     this.setChartArrayDataFromDateToDate(reportDayStart, reportDayEnd);
+    this.exportExcel(reportDayStart, reportDayEnd);
   }
 
   componentDidMount() {
