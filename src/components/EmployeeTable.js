@@ -200,11 +200,13 @@ export default class EmployeeTable extends Component {
                     </Col>
                     <Col md={7}>
                         {currentEmployee ?
-                            <div><p><b>{currentEmployee.id} - {currentEmployee.name}</b>  Record</p>
-                                <p>Select date (limit 3 months prior to today):</p>
+                            <div><p>Selected employee: <b>{currentEmployee.id} - {currentEmployee.name}</b></p>
+                                <p>Select date to export total time report excel file (limit 3 months prior to today):</p>
                                 <ChartDatePicker pickDate={this.changeReportDate} />
                                 <span>Download Excel: </span>
                                 <ExcelExport excelArray={excelArray} />
+                                <hr></hr>
+                                <p>Record List</p>
                             </div>
                             : <p>No employee selected</p>}
                         <RecordTable listRecord={listRecord} readOnly={true} />

@@ -10,7 +10,7 @@ import {
     Nav,
     NavItem
 } from "reactstrap";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 class TopMenu extends React.Component {
     constructor(props) {
         super(props);
@@ -33,6 +33,27 @@ class TopMenu extends React.Component {
                     <NavbarToggler onClick={this.toggle} />
                     <Collapse isOpen={this.state.isOpen} navbar>
                         <Nav className="ml-auto" navbar>
+                            <NavLink className="nav-link" to="/" exact activeStyle={{
+                                textDecoration: 'underline'
+                            }}>My Record</NavLink>
+                            <NavLink className="nav-link" to="/employee-record" exact activeStyle={{
+                                textDecoration: 'underline'
+                            }}>Employee Record</NavLink>
+                            <NavLink className="nav-link" to="/report" exact activeStyle={{
+                                textDecoration: 'underline'
+                            }}>Report</NavLink>
+                            <NavItem className="userBox">
+                                <img id='avatar' alt='avatar' width={40} height={40} src={user.photoURL} />
+                                <p id='display-name'>{user.displayName}</p>
+                                <Button className="secondary" onClick={(e) => {
+                                    const { reset } = this.props;
+                                    this.props.history.push('/');
+                                    reset();
+                                    signOut();
+                                }}>Sign out</Button>
+                            </NavItem>
+                        </Nav>
+                        {/* <Nav className="ml-auto" navbar>
                             <NavItem>
                                 <Link to="/">My Record</Link>
                             </NavItem>
@@ -52,10 +73,10 @@ class TopMenu extends React.Component {
                                     signOut();
                                 }}>Sign out</Button>
                             </NavItem>
-                        </Nav>
+                        </Nav> */}
                     </Collapse>
                 </Navbar>
-            </div>
+            </div >
         );
     }
 }

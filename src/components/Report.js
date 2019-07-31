@@ -7,8 +7,7 @@ export default class Report extends Component {
         const { chartArrayData, pickDate, excelArray } = this.props;
         return (
             <div>
-
-                <p>Select date (limit 3 months prior to today):</p>
+                <p>Select date to export total time report excel file (limit 3 months prior to today):</p>
                 <ChartDatePicker pickDate={pickDate} />
                 <span>Download Excel: </span>
                 <ExcelExport excelArray={excelArray} />
