@@ -55,6 +55,12 @@ export default class EmployeeTable extends Component {
                     }
                 }
             }
+            //sort date for sequence
+            dateArray.sort(function (a, b) {
+                var aa = a.split('/').reverse().join(),
+                    bb = b.split('/').reverse().join();
+                return aa < bb ? -1 : (aa > bb ? 1 : 0);
+            });
             let chartArrayData = [];
             var id = currentEmployee.id;
             var name = currentEmployee.name;

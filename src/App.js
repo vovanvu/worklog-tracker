@@ -213,6 +213,12 @@ class App extends Component {
           }
         }
       }
+      //sort date for sequence
+      dateArray.sort(function (a, b) {
+        var aa = a.split('/').reverse().join(),
+          bb = b.split('/').reverse().join();
+        return aa < bb ? -1 : (aa > bb ? 1 : 0);
+      });
       let chartArrayData = [];
       for (let i = 0; i < dateArray.length; i++) {
         const date = dateArray[i];
@@ -258,6 +264,12 @@ class App extends Component {
           }
         }
       }
+      //sort date for sequence
+      dateArray.sort(function (a, b) {
+        var aa = a.split('/').reverse().join(),
+          bb = b.split('/').reverse().join();
+        return aa < bb ? -1 : (aa > bb ? 1 : 0);
+      });
       let chartArrayData = [];
       var employee = await this.getEmployeeFromUid(user.uid);
       var id = employee.id;
