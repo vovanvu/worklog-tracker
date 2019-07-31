@@ -194,7 +194,7 @@ export default class EmployeeTable extends Component {
             <div>
                 <Row>
                     <Col md={5}>
-                        <p>Select Employee. Total: {listEmployee.length}</p>
+                        <p>Select employee below. Total: {listEmployee.length}</p>
                         <ReactTable
                             columns={columns}
                             data={listEmployee}
@@ -213,9 +213,9 @@ export default class EmployeeTable extends Component {
                                 <ExcelExport excelArray={excelArray} />
                                 <hr></hr>
                                 <p>Record List</p>
+                                <RecordTable listRecord={listRecord} readOnly={true} />
                             </div>
                             : <p>No employee selected</p>}
-                        <RecordTable listRecord={listRecord} readOnly={true} />
                     </Col>
                 </Row>
             </div >
