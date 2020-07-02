@@ -1,2 +1,2 @@
-Track your task with Worklog Tracker /n
+Track your task with Worklog Tracker \n
 demo: https://firstfirebase-ffcda.web.app/
